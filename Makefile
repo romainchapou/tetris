@@ -1,11 +1,11 @@
 CC=gcc
 CFLAGS=-std=c99 -Wall -Wextra -g
-LFLAGS=-lncurses
+LDFLAGS=-lncurses
 
 all: tetris
 
 tetris: tetris.c
-	$(CC) $(CFLAGS) -o tetris tetris.c $(LFLAGS)
+	$(CC) $(CFLAGS) -o tetris tetris.c $(LDFLAGS)
 
 
 .PHONY: clean

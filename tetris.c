@@ -111,7 +111,7 @@ int tetrimino_id(tetrimino t)
 char get_tetromino_widht()
 {
     int m = 0;
-    char shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][0])
@@ -124,7 +124,7 @@ char get_tetromino_widht()
 char get_tetromino_height()
 {
     int m = 0;
-    char shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][1])
@@ -145,38 +145,108 @@ void get_new_tetrimino()
     ctetr = (tetrimino) { 5, 0, 2, 3, 0, 'L'};
 }
 
+void add_blocks_to_matrix()
+{
+    int x;
+    int y;
+
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+
+    for (int i = 0; i < 4; ++i) {
+        x = shapes[shape_nb][i][0];
+        y = shapes[shape_nb][i][1];
+
+        blocks[ctetr.x + x][ctetr.y + y] = true;
+    }
+}
+
+bool can_move_down()
+{
+    int x;
+    int y;
+
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+
+    for (int i = 0; i < 4; ++i) {
+        x = ctetr.x + shapes[shape_nb][i][0];
+        y = ctetr.y + shapes[shape_nb][i][1];
+
+        if (y >= WINDOW_HEIGHT - 1 || blocks[x][y + 1])
+            return false;
+    }
+
+    return true;
+}
+
+bool can_move_right()
+{
+    int x;
+    int y;
+
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+
+    for (int i = 0; i < 4; ++i) {
+        x = ctetr.x + shapes[shape_nb][i][0];
+        y = ctetr.y + shapes[shape_nb][i][1];
+
+        if (x >= WINDOW_WIDTH - 1 || (y >= 0 && blocks[x + 1][y]))
+            return false;
+    }
+
+    return true;
+}
+
+bool can_move_left()
+{
+    int x;
+    int y;
+
+    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+
+    for (int i = 0; i < 4; ++i) {
+        x = ctetr.x + shapes[shape_nb][i][0];
+        y = ctetr.y + shapes[shape_nb][i][1];
+
+        if (x <= 0 || (y >= 0 && blocks[x - 1][y]))
+            return false;
+    }
+
+    return true;
+}
+
 void update_game()
 {
+    // @Hack : improve this and if possible make the key repeat less bad
     wtimeout(game_box, 1);
     last_input = wgetch(game_box);
-    // wrefresh(game_box);
+
+    if(total_time % 30 == 0) {
+        if(!can_move_down()) {
+            add_blocks_to_matrix();
+            get_new_tetrimino();
+        }
+        else
+            ++ctetr.y;
+    }
 
     switch(last_input) {
         case 'h':
-            if (ctetr.x > 0)
+            if (can_move_left())
                 --ctetr.x;
             break;
 
         case 'l':
-            if (ctetr.x + ctetr.width < WINDOW_WIDTH)
+            if (can_move_right())
                 ++ctetr.x;
             break;
 
         case 'j':
-            if (ctetr.y + ctetr.height < WINDOW_HEIGHT + 1)
+            if (can_move_down())
                 ++ctetr.y;
             break;
 
         case 'q':
             end_game = true;
-    }
-
-    if(total_time % 30 == 0)
-    {
-        if(ctetr.y + ctetr.height > WINDOW_HEIGHT)
-            get_new_tetrimino();
-        else
-            ++ctetr.y;
     }
 }
 
@@ -223,17 +293,11 @@ int main()
 
     get_new_tetrimino();
 
-    // blocks[0][0] = true;
-    // blocks[1][0] = true;
-    // blocks[1][1] = true;
-    // blocks[1][2] = true;
-
-    game_box = subwin(stdscr, 1 + WINDOW_HEIGHT + 2, 1 + 2*WINDOW_WIDTH + 1, 0, 0);
+    game_box = subwin(stdscr, 1 + WINDOW_HEIGHT + 1, 1 + 2*WINDOW_WIDTH + 1, 0, 0);
     wborder(game_box, '|', '|', '-', '-', '+', '+', '+', '+');
     wrefresh(game_box);
 
-    while(!end_game)
-    {
+    while(!end_game) {
         clear();
 
         update_game();

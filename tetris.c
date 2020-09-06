@@ -66,8 +66,8 @@ char shapes[28][4][2] = {
 };
 
 bool end_game = false;
-int delay = 60000;
-int total_time = 0;
+int delay = 15000;
+int total_time = 0; // @Cleanup : make sure this doesn't overflow
 
 char last_input = 'l';
 WINDOW *game_box;
@@ -160,6 +160,40 @@ void add_blocks_to_matrix()
     }
 }
 
+bool line_is_complete(int i)
+{
+    for (int j = 0; j < WINDOW_WIDTH; ++j) {
+        if (!blocks[j][i])
+            return false;
+    }
+
+    return true;
+}
+
+void remove_line(int i)
+{
+    for (int j = i; j > 0; --j)
+        for (int x = 0; x < WINDOW_WIDTH; ++x)
+            blocks[x][j] = blocks[x][j-1];
+
+    for (int x = 0; x < WINDOW_WIDTH; ++x)
+        blocks[x][0] = false;
+}
+
+void check_for_complete_line()
+{
+    for (int i = 0; i < WINDOW_HEIGHT; ++i)
+        if (line_is_complete(i))
+            remove_line(i);
+}
+
+void check_for_game_over()
+{
+    for (int x = 0; x <  WINDOW_WIDTH; ++x)
+        if(blocks[x][0])
+            end_game = true;
+}
+
 bool can_move_down()
 {
     int x;
@@ -220,9 +254,11 @@ void update_game()
     wtimeout(game_box, 1);
     last_input = wgetch(game_box);
 
-    if(total_time % 30 == 0) {
-        if(!can_move_down()) {
+    if (total_time % 60 == 0) {
+        if (!can_move_down()) {
             add_blocks_to_matrix();
+            check_for_complete_line();
+            check_for_game_over();
             get_new_tetrimino();
         }
         else
@@ -293,11 +329,11 @@ int main()
 
     get_new_tetrimino();
 
-    game_box = subwin(stdscr, 1 + WINDOW_HEIGHT + 1, 1 + 2*WINDOW_WIDTH + 1, 0, 0);
+    game_box = subwin(stdscr, WINDOW_HEIGHT + 2, 2*WINDOW_WIDTH + 2, 0, 0);
     wborder(game_box, '|', '|', '-', '-', '+', '+', '+', '+');
     wrefresh(game_box);
 
-    while(!end_game) {
+    while (!end_game) {
         clear();
 
         update_game();
@@ -309,6 +345,8 @@ int main()
 
     /* Close ncurses */
     endwin();
+
+    printf("Game over!\nYour score is : Not implemented yet !\n");
     
     return 0;
 }

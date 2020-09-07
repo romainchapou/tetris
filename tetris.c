@@ -69,7 +69,6 @@ bool end_game = false;
 int delay = 15000;
 int total_time = 0; // @Cleanup : make sure this doesn't overflow
 
-char last_input = 'l';
 WINDOW *game_box;
 bool blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
 
@@ -78,7 +77,7 @@ typedef struct tetrimino {
     int x;
     int y;
 
-    /* Width and heihgt are used for collision detection */
+    /* Width and height are used for collision detection */
     int width;
     int height;
 
@@ -189,6 +188,8 @@ void check_for_complete_line()
             remove_line(i);
 }
 
+// @Hack : this simple check will do for now, but we will eventually need
+// something better
 void check_for_game_over()
 {
     for (int x = 0; x <  WINDOW_WIDTH; ++x)
@@ -252,9 +253,17 @@ bool can_move_left()
 
 void update_game()
 {
-    // @Hack : improve this and if possible make the key repeat less bad
-    wtimeout(game_box, 1);
-    last_input = wgetch(game_box);
+    /*
+     * Get an input from the keyboard without waiting.
+     * This works pretty well and even seems to add inputs to an internal queue
+     * when they can't be treated right now.
+     *
+     * @Cleanup : See if it's possible to set the size of the input queue
+     * (something like 3 should work nicely) as it causes weird behaviour when
+     * mashing the keys.
+     */
+    wtimeout(game_box, 0);
+    char last_input = wgetch(game_box);
 
     if (total_time % 60 == 0) {
         if (!can_move_down()) {

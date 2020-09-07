@@ -7,6 +7,16 @@
 #define WINDOW_WIDTH 10
 #define WINDOW_HEIGHT 22
 
+typedef enum TetriminoType {
+    TETRIMINO_TYPE_I = 0,
+    TETRIMINO_TYPE_O = 1,
+    TETRIMINO_TYPE_T = 2,
+    TETRIMINO_TYPE_L = 3,
+    TETRIMINO_TYPE_J = 4,
+    TETRIMINO_TYPE_Z = 5,
+    TETRIMINO_TYPE_S = 6,
+} TetriminoType;
+
 /*
  * The convention used for the coordinates is that (0, 0) is the closest point
  * to the shape such that every block in the shape has positive coordinates.
@@ -30,7 +40,7 @@ char shapes[28][4][2] = {
 
     /* angle 0 */
     {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 0  : I  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 1  : O  TODO
+    {{0, 0}, {1, 0}, {0, 1}, {1, 1}}, // 1  : O
     {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 2  : T  TODO
     {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, // 3  : L
     {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 4  : J  TODO
@@ -85,32 +95,21 @@ typedef struct Tetrimino {
     int angle;
 
     /* Type can be either I, O, T, L, J, Z or S */
-    char type;
-}Tetrimino;
+    TetriminoType type;
+} Tetrimino;
 
 /* The tetrimino currently controlled by the player */
 Tetrimino ctetr;
 
-int tetrimino_id(Tetrimino t)
+int get_shape_nb(Tetrimino t)
 {
-    switch(t.type) {
-        case 'I': return 0;
-        case 'O': return 1;
-        case 'T': return 2;
-        case 'L': return 3;
-        case 'J': return 4;
-        case 'Z': return 5;
-        case 'S': return 6;
-    }
-
-    assert(0 && "Tetrimino id not found");
+    return t.type + 7 * t.angle;
 }
-
 
 char get_tetromino_widht()
 {
     int m = 0;
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][0])
@@ -123,7 +122,7 @@ char get_tetromino_widht()
 char get_tetromino_height()
 {
     int m = 0;
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][1])
@@ -143,7 +142,7 @@ void print_pixel(int x, int y)
 void get_new_tetrimino()
 {
     // @Hardcoded
-    ctetr = (Tetrimino) { 5, 0, 2, 2, 0, 'O'};
+    ctetr = (Tetrimino) { 5, 0, 2, 2, 0, TETRIMINO_TYPE_O};
 }
 
 void add_blocks_to_matrix()
@@ -151,7 +150,7 @@ void add_blocks_to_matrix()
     int x;
     int y;
 
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         x = shapes[shape_nb][i][0];
@@ -202,7 +201,7 @@ bool can_move_down()
     int x;
     int y;
 
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         x = ctetr.x + shapes[shape_nb][i][0];
@@ -220,7 +219,7 @@ bool can_move_right()
     int x;
     int y;
 
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         x = ctetr.x + shapes[shape_nb][i][0];
@@ -238,7 +237,7 @@ bool can_move_left()
     int x;
     int y;
 
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         x = ctetr.x + shapes[shape_nb][i][0];
@@ -302,7 +301,7 @@ void display_current_tetrimino()
     int x;
     int y;
 
-    int shape_nb = tetrimino_id(ctetr) + 7*ctetr.angle;
+    int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
         x = shapes[shape_nb][i][0];

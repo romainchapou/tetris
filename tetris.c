@@ -275,8 +275,15 @@ void update_game()
             break;
 
         case 'j':
-            if (can_move_down())
+            if (can_move_down()) {
                 ++ctetr.y;
+
+                /* Reset the timer when the tetrimino is about to be dropped as
+                 * to give the player a last chance to place it correctly
+                 * without any timer luck involved */
+                if(!can_move_down())
+                    total_time = 0;
+            }
             break;
 
         case 'k':

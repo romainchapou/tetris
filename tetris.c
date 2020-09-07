@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <time.h>
+#include <stdlib.h>
 
 #define WINDOW_WIDTH 10
 #define WINDOW_HEIGHT 22
@@ -39,13 +41,13 @@ typedef enum TetriminoType {
 char shapes[28][4][2] = {
 
     /* angle 0 */
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 0  : I  TODO
+    {{0, 0}, {0, 1}, {0, 2}, {0, 3}}, // 0  : I
     {{0, 0}, {1, 0}, {0, 1}, {1, 1}}, // 1  : O
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 2  : T  TODO
+    {{0, 1}, {1, 1}, {2, 1}, {1, 0}}, // 2  : T
     {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, // 3  : L
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 4  : J  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 5  : Z  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 6  : S  TODO
+    {{1, 0}, {1, 1}, {1, 2}, {0, 2}}, // 4  : J
+    {{0, 0}, {1, 0}, {1, 1}, {1, 2}}, // 5  : Z
+    {{0, 1}, {1, 1}, {1, 0}, {2, 0}}, // 6  : S
 
     /* angle 1 */
     {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 7  : I  TODO
@@ -106,10 +108,10 @@ int get_shape_nb(Tetrimino t)
     return t.type + 7 * t.angle;
 }
 
-char get_tetromino_widht()
+char get_tetromino_widht(Tetrimino t)
 {
     int m = 0;
-    int shape_nb = get_shape_nb(ctetr);
+    int shape_nb = get_shape_nb(t);
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][0])
@@ -119,10 +121,10 @@ char get_tetromino_widht()
     return m + 1;
 }
 
-char get_tetromino_height()
+char get_tetromino_height(Tetrimino t)
 {
     int m = 0;
-    int shape_nb = get_shape_nb(ctetr);
+    int shape_nb = get_shape_nb(t);
 
     for (int i = 0; i < 4; ++i) {
         if (m > shapes[shape_nb][i][1])
@@ -141,8 +143,14 @@ void print_pixel(int x, int y)
 
 void get_new_tetrimino()
 {
-    // @Hardcoded
-    ctetr = (Tetrimino) { 5, 0, 2, 2, 0, TETRIMINO_TYPE_O};
+    ctetr.type = rand() % 7;
+
+    ctetr.x = 5;
+    ctetr.y = 0;
+    ctetr.angle = 0;
+
+    ctetr.width = get_tetromino_widht(ctetr);
+    ctetr.height = get_tetromino_height(ctetr);
 }
 
 void add_blocks_to_matrix()
@@ -336,6 +344,9 @@ int main()
     initscr();       // Initialize the window
     noecho();        // Don't echo the keypresses
     curs_set(false); // Don't display the cursor
+
+    /* Initalize the seed used to randomly spawn tetriminos */
+    srand(time(NULL));
 
     get_new_tetrimino();
 

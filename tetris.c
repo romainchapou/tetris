@@ -89,10 +89,6 @@ typedef struct Tetrimino {
     int x;
     int y;
 
-    /* Width and height are used for collision detection */
-    int width;
-    int height;
-
     /* Rotation angle, from 0 to 3 */
     int angle;
 
@@ -106,32 +102,6 @@ Tetrimino ctetr;
 int get_shape_nb(Tetrimino t)
 {
     return t.type + 7 * t.angle;
-}
-
-char get_tetromino_widht(Tetrimino t)
-{
-    int m = 0;
-    int shape_nb = get_shape_nb(t);
-
-    for (int i = 0; i < 4; ++i) {
-        if (m > shapes[shape_nb][i][0])
-            m = shapes[shape_nb][i][0];
-    }
-
-    return m + 1;
-}
-
-char get_tetromino_height(Tetrimino t)
-{
-    int m = 0;
-    int shape_nb = get_shape_nb(t);
-
-    for (int i = 0; i < 4; ++i) {
-        if (m > shapes[shape_nb][i][1])
-            m = shapes[shape_nb][i][1];
-    }
-
-    return m + 1;
 }
 
 /* Each "pixel" is two characters wide */
@@ -148,9 +118,6 @@ void get_new_tetrimino()
     ctetr.x = 5;
     ctetr.y = 0;
     ctetr.angle = 0;
-
-    ctetr.width = get_tetromino_widht(ctetr);
-    ctetr.height = get_tetromino_height(ctetr);
 }
 
 void add_blocks_to_matrix()

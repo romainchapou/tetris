@@ -9,15 +9,16 @@
 #define WINDOW_WIDTH 10
 #define WINDOW_HEIGHT 22
 
-typedef enum TetriminoType {
-    TETRIMINO_TYPE_I = 0,
-    TETRIMINO_TYPE_O = 1,
-    TETRIMINO_TYPE_T = 2,
-    TETRIMINO_TYPE_L = 3,
-    TETRIMINO_TYPE_J = 4,
-    TETRIMINO_TYPE_Z = 5,
-    TETRIMINO_TYPE_S = 6,
-} TetriminoType;
+typedef enum BlockType {
+    BLOCK_TYPE_NONE = 0,
+    BLOCK_TYPE_I    = 1,
+    BLOCK_TYPE_O    = 2,
+    BLOCK_TYPE_T    = 3,
+    BLOCK_TYPE_L    = 4,
+    BLOCK_TYPE_J    = 5,
+    BLOCK_TYPE_Z    = 6,
+    BLOCK_TYPE_S    = 7,
+} BlockType;
 
 /*
  * The convention used for the coordinates is that (0, 0) is the closest point
@@ -82,7 +83,7 @@ int delay = 15000;
 int total_time = 0; // @Cleanup : make sure this doesn't overflow
 
 WINDOW *game_box;
-bool blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
+BlockType blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
 
 typedef struct Tetrimino {
     /* Position of the tetrimino */
@@ -93,15 +94,16 @@ typedef struct Tetrimino {
     int angle;
 
     /* Type can be either I, O, T, L, J, Z or S */
-    TetriminoType type;
+    BlockType type;
 } Tetrimino;
 
 /* The tetrimino currently controlled by the player */
 Tetrimino ctetr;
 
+// @Optim : precompute this
 int get_shape_nb(Tetrimino t)
 {
-    return t.type + 7 * t.angle;
+    return (t.type - 1) + 7 * t.angle;
 }
 
 /* Each "pixel" is two characters wide */
@@ -113,7 +115,7 @@ void print_pixel(int x, int y)
 
 void get_new_tetrimino()
 {
-    ctetr.type = rand() % 7;
+    ctetr.type = 1 + rand() % 7;
 
     ctetr.x = 5;
     ctetr.y = 0;
@@ -131,7 +133,7 @@ void add_blocks_to_matrix()
         x = shapes[shape_nb][i][0];
         y = shapes[shape_nb][i][1];
 
-        blocks[ctetr.x + x][ctetr.y + y] = true;
+        blocks[ctetr.x + x][ctetr.y + y] = ctetr.type;
     }
 }
 
@@ -152,7 +154,7 @@ void remove_line(int i)
             blocks[x][j] = blocks[x][j-1];
 
     for (int x = 0; x < WINDOW_WIDTH; ++x)
-        blocks[x][0] = false;
+        blocks[x][0] = BLOCK_TYPE_NONE;
 }
 
 void check_for_complete_line()
@@ -278,7 +280,7 @@ void display_current_tetrimino()
 
     int shape_nb = get_shape_nb(ctetr);
 
-    wattron(game_box, COLOR_PAIR(ctetr.type + 1));
+    wattron(game_box, COLOR_PAIR(ctetr.type));
 
     for (int i = 0; i < 4; ++i) {
         x = shapes[shape_nb][i][0];
@@ -287,7 +289,7 @@ void display_current_tetrimino()
         print_pixel(ctetr.x + x, ctetr.y + y);
     }
 
-    wattroff(game_box, COLOR_PAIR(ctetr.type + 1));
+    wattroff(game_box, COLOR_PAIR(ctetr.type));
 }
 
 void display_game()
@@ -298,12 +300,22 @@ void display_game()
 
     display_current_tetrimino();
 
+    /*
+     * @Optim : is it better to loop over the matrix for each color, so we loop
+     * 7 times but we also change colors only 7 times, or to loop once and
+     * change the color for each block ?
+     */
+
     /* Display already fallen tetriminos */
-    for (int i = 0; i < WINDOW_WIDTH; ++i) {
-        for (int j = 0; j < WINDOW_HEIGHT; ++j) {
-            if (blocks[i][j])
-                print_pixel(i, j);
-        }
+    for (BlockType color = 1; color <= 7; ++color) {
+        wattron(game_box, COLOR_PAIR(color));
+
+        for (int i = 0; i < WINDOW_WIDTH; ++i)
+            for (int j = 0; j < WINDOW_HEIGHT; ++j)
+                if (blocks[i][j] == color)
+                    print_pixel(i, j);
+
+        wattroff(game_box, COLOR_PAIR(color));
     }
 
     wrefresh(game_box);
@@ -315,7 +327,7 @@ int main()
     initscr();       // Initialize the window
     noecho();        // Don't echo the keypresses
     curs_set(false); // Don't display the cursor
-    start_color();
+    start_color();   // Use colors
 
     /* Initialize the colors */
     use_default_colors();

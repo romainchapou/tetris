@@ -130,10 +130,10 @@ void add_blocks_to_matrix()
     int shape_nb = get_shape_nb(ctetr);
 
     for (int i = 0; i < 4; ++i) {
-        x = shapes[shape_nb][i][0];
-        y = shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[shape_nb][i][0];
+        y = ctetr.y + shapes[shape_nb][i][1];
 
-        blocks[ctetr.x + x][ctetr.y + y] = ctetr.type;
+        blocks[x][y] = ctetr.type;
     }
 }
 
@@ -283,10 +283,10 @@ void display_current_tetrimino()
     wattron(game_box, COLOR_PAIR(ctetr.type));
 
     for (int i = 0; i < 4; ++i) {
-        x = shapes[shape_nb][i][0];
-        y = shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[shape_nb][i][0];
+        y = ctetr.y + shapes[shape_nb][i][1];
 
-        print_pixel(ctetr.x + x, ctetr.y + y);
+        print_pixel(x, y);
     }
 
     wattroff(game_box, COLOR_PAIR(ctetr.type));

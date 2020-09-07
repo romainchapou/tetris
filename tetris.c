@@ -46,7 +46,7 @@ char shapes[28][4][2] = {
     {{0, 1}, {1, 1}, {2, 1}, {1, 0}}, // 2  : T
     {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, // 3  : L
     {{1, 0}, {1, 1}, {1, 2}, {0, 2}}, // 4  : J
-    {{0, 0}, {1, 0}, {1, 1}, {1, 2}}, // 5  : Z
+    {{0, 0}, {1, 0}, {1, 1}, {2, 1}}, // 5  : Z
     {{0, 1}, {1, 1}, {1, 0}, {2, 0}}, // 6  : S
 
     /* angle 1 */
@@ -319,13 +319,13 @@ int main()
 
     /* Initialize the colors */
     use_default_colors();
-    init_pair(1, COLOR_RED, -1);
-    init_pair(2, COLOR_GREEN, -1);
-    init_pair(3, COLOR_YELLOW, -1);
-    init_pair(4, COLOR_BLUE, -1);
-    init_pair(5, COLOR_MAGENTA, -1);
-    init_pair(6, COLOR_CYAN, -1);
-    init_pair(7, -1, -1);
+    init_pair(1, COLOR_CYAN, -1);     /* I tetrimino */
+    init_pair(2, COLOR_YELLOW, -1);   /* O tetrimino */
+    init_pair(3, COLOR_MAGENTA, -1);  /* T tetrimino */
+    init_pair(4, -1, -1);             /* L tetrimino */  /* foreground color */
+    init_pair(5, COLOR_BLUE, -1);     /* J tetrimino */
+    init_pair(6, COLOR_RED, -1);      /* Z tetrimino */
+    init_pair(7, COLOR_GREEN, -1);    /* S tetrimino */
 
     /* Initalize the seed used to randomly spawn tetriminos */
     srand(time(NULL));

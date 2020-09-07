@@ -134,9 +134,11 @@ char get_tetromino_height()
     return m + 1;
 }
 
+/* Each "pixel" is two characters wide */
 void print_pixel(int x, int y)
 {
-    mvwprintw(game_box, 1+y, 1+2*x, "##");
+    mvwaddch(game_box, 1+y, 1+2*x, ACS_BLOCK);
+    mvwaddch(game_box, 1+y, 2+2*x, ACS_BLOCK);
 }
 
 void get_new_tetrimino()
@@ -305,7 +307,7 @@ void display_game()
 {
     // @Optim : don't clear the whole screen every frame
     clear();
-    wborder(game_box, '|', '|', '-', '-', '+', '+', '+', '+');
+    box(game_box, ACS_VLINE, ACS_HLINE);
 
     display_current_tetrimino();
 
@@ -330,7 +332,7 @@ int main()
     get_new_tetrimino();
 
     game_box = subwin(stdscr, WINDOW_HEIGHT + 2, 2*WINDOW_WIDTH + 2, 0, 0);
-    wborder(game_box, '|', '|', '-', '-', '+', '+', '+', '+');
+    box(game_box, ACS_VLINE, ACS_HLINE);
     wrefresh(game_box);
 
     while (!end_game) {

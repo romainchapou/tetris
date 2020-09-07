@@ -20,62 +20,44 @@ typedef enum BlockType {
     BLOCK_TYPE_S    = 7,
 } BlockType;
 
-/*
- * The convention used for the coordinates is that (0, 0) is the closest point
- * to the shape such that every block in the shape has positive coordinates.
- *
- * For example, the first block of the L shaped tetrimino coincide with (0, 0),
- * but for the S shaped tetrimino, the (0, 0) point does not coincide with any
- * of its blocks.
- *
- *   L tetrimino                      S tetrimino
- *                                                     
- *  +---------> x                    +---------> x
- *  |                                |
- *  |  11 <--- (0, 0)       (0, 0) ---> X 3344
- *  |  22                            |  1122 
- *  |  3344                          |  
- *  |                                |
- *  v y                              v y
- *
- */
+/* Possible shapes of all tetriminos given a rotation angle */
 char shapes[28][4][2] = {
 
     /* angle 0 */
-    {{0, 0}, {0, 1}, {0, 2}, {0, 3}}, // 0  : I
-    {{0, 0}, {1, 0}, {0, 1}, {1, 1}}, // 1  : O
-    {{0, 1}, {1, 1}, {2, 1}, {1, 0}}, // 2  : T
-    {{0, 0}, {0, 1}, {0, 2}, {1, 2}}, // 3  : L
-    {{1, 0}, {1, 1}, {1, 2}, {0, 2}}, // 4  : J
-    {{0, 0}, {1, 0}, {1, 1}, {2, 1}}, // 5  : Z
-    {{0, 1}, {1, 1}, {1, 0}, {2, 0}}, // 6  : S
+    {{0, 0}, {0, 1}, {0, 2}, {0, 3}},  // 0  : I
+    {{0, 0}, {1, 0}, {0, 1}, {1, 1}},  // 1  : O
+    {{0, 1}, {1, 1}, {2, 1}, {1, 0}},  // 2  : T
+    {{0, 0}, {0, 1}, {0, 2}, {1, 2}},  // 3  : L
+    {{1, 0}, {1, 1}, {1, 2}, {0, 2}},  // 4  : J
+    {{0, 0}, {1, 0}, {1, 1}, {2, 1}},  // 5  : Z
+    {{0, 1}, {1, 1}, {1, 0}, {2, 0}},  // 6  : S
 
     /* angle 1 */
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 7  : I  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 8  : O  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 9  : T  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 10 : L  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 11 : J  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 12 : Z  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 13 : S  TODO
+    {{-1, 2}, {0, 2}, {1, 2}, {2, 2}}, // 7  : I
+    {{0, 0}, {1, 0}, {0, 1}, {1, 1}},  // 8  : O
+    {{0, 1}, {1, 1}, {1, 0}, {1, 2}},  // 9  : T
+    {{0, 1}, {1, 1}, {2, 1}, {2, 0}},  // 10 : L
+    {{0, 0}, {1, 0}, {2, 0}, {2, 1}},  // 11 : J
+    {{1, 0}, {1, 1}, {0, 1}, {0, 2}},  // 12 : Z
+    {{0, 0}, {0, 1}, {1, 1}, {1, 2}},  // 13 : S
 
     /* angle 2 */
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 14 : I  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 15 : O  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 16 : T  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 17 : L  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 18 : J  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 19 : Z  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 20 : S  TODO
+    {{1, 0}, {1, 1}, {1, 2}, {1, 3}},  // 14 : I
+    {{0, 0}, {1, 0}, {0, 1}, {1, 1}},  // 15 : O
+    {{0, 1}, {1, 1}, {2, 1}, {1, 2}},  // 16 : T
+    {{0, 0}, {1, 0}, {1, 1}, {1, 2}},  // 17 : L
+    {{0, 0}, {1, 0}, {0, 1}, {0, 2}},  // 18 : J
+    {{0, 0}, {1, 0}, {1, 1}, {2, 1}},  // 19 : Z
+    {{0, 1}, {1, 1}, {1, 0}, {2, 0}},  // 20 : S
 
     /* angle 3 */
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 21 : I  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 22 : O  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 23 : T  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 24 : L  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 25 : J  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 26 : Z  TODO
-    {{0, 0}, {0, 0}, {0, 0}, {0, 0}}, // 27 : S  TODO
+    {{-1, 2}, {0, 2}, {1, 2}, {2, 2}}, // 21 : I
+    {{0, 0}, {1, 0}, {0, 1}, {1, 1}},  // 22 : O
+    {{1, 0}, {1, 1}, {2, 1}, {1, 2}},  // 23 : T
+    {{0, 0}, {1, 0}, {2, 0}, {0, 1}},  // 24 : L
+    {{0, 0}, {0, 1}, {1, 1}, {2, 1}},  // 25 : J
+    {{1, 0}, {1, 1}, {0, 1}, {0, 2}},  // 26 : Z
+    {{0, 0}, {0, 1}, {1, 1}, {1, 2}},  // 27 : S
 };
 
 bool end_game = false;
@@ -95,15 +77,18 @@ typedef struct Tetrimino {
 
     /* Type can be either I, O, T, L, J, Z or S */
     BlockType type;
+
+    /* Combinasion of type and angle, id of the shape in the shapes array */
+    int shape_number;
 } Tetrimino;
 
 /* The tetrimino currently controlled by the player */
 Tetrimino ctetr;
 
 // @Optim : precompute this
-int get_shape_nb(Tetrimino t)
+int get_shape_nb(BlockType type, int angle)
 {
-    return (t.type - 1) + 7 * t.angle;
+    return (type - 1) + 7 * angle;
 }
 
 /* Each "pixel" is two characters wide */
@@ -116,10 +101,44 @@ void print_pixel(int x, int y)
 void get_new_tetrimino()
 {
     ctetr.type = 1 + rand() % 7;
+    ctetr.angle = 0;
 
     ctetr.x = 5;
     ctetr.y = 0;
-    ctetr.angle = 0;
+
+    ctetr.shape_number = get_shape_nb(ctetr.type, ctetr.angle);
+}
+
+bool shape_can_fit(int tx, int ty, int shape_number)
+{
+    int x; int y;
+
+    for (int i = 0; i < 4; ++i) {
+        x = tx + shapes[shape_number][i][0];
+        y = ty + shapes[shape_number][i][1];
+
+        if (x < 0 || x >= WINDOW_WIDTH || y < 0 || y >= WINDOW_HEIGHT || blocks[x][y])
+            return false;
+    }
+
+    return true;
+}
+
+void rotate_tetrimino(int angle)
+{
+    // C modulos really are the greatests
+    if (angle == -1)
+        angle = 3;
+
+    assert(angle >= 0);
+
+    int new_angle = (ctetr.angle + angle) % 4;
+    int new_shape_nb = get_shape_nb(ctetr.type, new_angle);
+
+    if (shape_can_fit(ctetr.x, ctetr.y, new_shape_nb)) {
+        ctetr.angle = new_angle;
+        ctetr.shape_number = new_shape_nb;
+    }
 }
 
 void add_blocks_to_matrix()
@@ -127,11 +146,9 @@ void add_blocks_to_matrix()
     int x;
     int y;
 
-    int shape_nb = get_shape_nb(ctetr);
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[shape_nb][i][0];
-        y = ctetr.y + shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         blocks[x][y] = ctetr.type;
     }
@@ -178,11 +195,9 @@ bool can_move_down()
     int x;
     int y;
 
-    int shape_nb = get_shape_nb(ctetr);
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[shape_nb][i][0];
-        y = ctetr.y + shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (y >= WINDOW_HEIGHT - 1 || blocks[x][y + 1])
             return false;
@@ -196,11 +211,9 @@ bool can_move_right()
     int x;
     int y;
 
-    int shape_nb = get_shape_nb(ctetr);
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[shape_nb][i][0];
-        y = ctetr.y + shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (x >= WINDOW_WIDTH - 1 || (y >= 0 && blocks[x + 1][y]))
             return false;
@@ -214,11 +227,9 @@ bool can_move_left()
     int x;
     int y;
 
-    int shape_nb = get_shape_nb(ctetr);
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[shape_nb][i][0];
-        y = ctetr.y + shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (x <= 0 || (y >= 0 && blocks[x - 1][y]))
             return false;
@@ -268,6 +279,16 @@ void update_game()
                 ++ctetr.y;
             break;
 
+        case 'k':
+        case 'c':
+            rotate_tetrimino(-1);
+            break;
+
+        case 'e':
+        case 'x':
+            rotate_tetrimino(1);
+            break;
+
         case 'q':
             end_game = true;
     }
@@ -278,13 +299,11 @@ void display_current_tetrimino()
     int x;
     int y;
 
-    int shape_nb = get_shape_nb(ctetr);
-
     wattron(game_box, COLOR_PAIR(ctetr.type));
 
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[shape_nb][i][0];
-        y = ctetr.y + shapes[shape_nb][i][1];
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         print_pixel(x, y);
     }

@@ -311,12 +311,16 @@ void display_current_tetrimino()
 
     int shape_nb = get_shape_nb(ctetr);
 
+    wattron(game_box, COLOR_PAIR(ctetr.type + 1));
+
     for (int i = 0; i < 4; ++i) {
         x = shapes[shape_nb][i][0];
         y = shapes[shape_nb][i][1];
 
         print_pixel(ctetr.x + x, ctetr.y + y);
     }
+
+    wattroff(game_box, COLOR_PAIR(ctetr.type + 1));
 }
 
 void display_game()
@@ -344,6 +348,17 @@ int main()
     initscr();       // Initialize the window
     noecho();        // Don't echo the keypresses
     curs_set(false); // Don't display the cursor
+    start_color();
+
+    /* Initialize the colors */
+    use_default_colors();
+    init_pair(1, COLOR_RED, -1);
+    init_pair(2, COLOR_GREEN, -1);
+    init_pair(3, COLOR_YELLOW, -1);
+    init_pair(4, COLOR_BLUE, -1);
+    init_pair(5, COLOR_MAGENTA, -1);
+    init_pair(6, COLOR_CYAN, -1);
+    init_pair(7, -1, -1);
 
     /* Initalize the seed used to randomly spawn tetriminos */
     srand(time(NULL));

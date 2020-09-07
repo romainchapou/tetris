@@ -72,7 +72,7 @@ int total_time = 0; // @Cleanup : make sure this doesn't overflow
 WINDOW *game_box;
 bool blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
 
-typedef struct tetrimino {
+typedef struct Tetrimino {
     /* Position of the tetrimino */
     int x;
     int y;
@@ -86,12 +86,12 @@ typedef struct tetrimino {
 
     /* Type can be either I, O, T, L, J, Z or S */
     char type;
-}tetrimino;
+}Tetrimino;
 
 /* The tetrimino currently controlled by the player */
-tetrimino ctetr;
+Tetrimino ctetr;
 
-int tetrimino_id(tetrimino t)
+int tetrimino_id(Tetrimino t)
 {
     switch(t.type) {
         case 'I': return 0;
@@ -143,7 +143,7 @@ void print_pixel(int x, int y)
 void get_new_tetrimino()
 {
     // @Hardcoded
-    ctetr = (tetrimino) { 5, 0, 2, 3, 0, 'L'};
+    ctetr = (Tetrimino) { 5, 0, 2, 2, 0, 'O'};
 }
 
 void add_blocks_to_matrix()

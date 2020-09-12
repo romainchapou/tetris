@@ -60,10 +60,21 @@ char shapes[28][4][2] = {
     {{0, 0}, {0, 1}, {1, 1}, {1, 2}},  // 27 : S
 };
 
-bool end_game = false;
-int delay = 15000;
-int total_time = 0; // @Cleanup : make sure this doesn't overflow
+/* Run at around 60 fps */
+const int refresh_delay = 16640;
 
+long score = 0;
+
+int level = 0;
+int cleared_lines = 0;
+
+/* Tetrimino's position will be updated once every update_frequency frame */
+int update_frequency = 48;
+
+bool end_game = false;
+int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
+
+WINDOW *score_box;
 WINDOW *game_box;
 BlockType blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
 
@@ -174,11 +185,34 @@ void remove_line(int i)
         blocks[x][0] = BLOCK_TYPE_NONE;
 }
 
+int score_factor(int nb_completed_lines)
+{
+    switch (nb_completed_lines)
+    {
+        case 0: return 0;
+        case 1: return 40;
+        case 2: return 100;
+        case 3: return 300;
+        case 4: return 1200;
+    }
+
+    assert(0 && "Impossible number of lines cleared");
+}
+
 void check_for_complete_line()
 {
-    for (int i = 0; i < WINDOW_HEIGHT; ++i)
-        if (line_is_complete(i))
+    int nb_completed_lines = 0;
+
+    // @Optim : only do this for lines close to the fallen tetrimino
+    for (int i = 0; i < WINDOW_HEIGHT; ++i) {
+        if (line_is_complete(i)) {
             remove_line(i);
+            ++nb_completed_lines;
+        }
+    }
+
+    score += (level + 1) * score_factor(nb_completed_lines);
+    cleared_lines += nb_completed_lines;
 }
 
 // @Hack : this simple check will do for now, but we will eventually need
@@ -252,12 +286,12 @@ void update_game()
     wtimeout(game_box, 0);
     char last_input = wgetch(game_box);
 
-    if (total_time % 60 == 0) {
+    if (nb_frames % update_frequency == 0) {
         if (!can_move_down()) {
             add_blocks_to_matrix();
             check_for_complete_line();
             check_for_game_over();
-            get_new_tetrimino();
+            get_new_tetrimino(); // @Incomplete : add proper delay before this
         }
         else
             ++ctetr.y;
@@ -282,7 +316,7 @@ void update_game()
                  * to give the player a last chance to place it correctly
                  * without any timer luck involved */
                 if(!can_move_down())
-                    total_time = 0;
+                    nb_frames = 0;
             }
             break;
 
@@ -321,7 +355,6 @@ void display_current_tetrimino()
 void display_game()
 {
     // @Optim : don't clear the whole screen every frame
-    clear();
     box(game_box, ACS_VLINE, ACS_HLINE);
 
     display_current_tetrimino();
@@ -347,6 +380,22 @@ void display_game()
     wrefresh(game_box);
 }
 
+void display_score()
+{
+    box(score_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(score_box, 0, 1, "Score");
+    mvwprintw(score_box, 1, 1, "%ld", score);
+
+    wrefresh(score_box);
+}
+
+void draw()
+{
+    clear();
+    display_game();
+    display_score();
+}
+
 int main()
 {
     /* Initialize graphics */
@@ -368,20 +417,24 @@ int main()
     /* Initalize the seed used to randomly spawn tetriminos */
     srand(time(NULL));
 
-    get_new_tetrimino();
-
+    /* Initalize game window */
     game_box = subwin(stdscr, WINDOW_HEIGHT + 2, 2*WINDOW_WIDTH + 2, 0, 0);
     box(game_box, ACS_VLINE, ACS_HLINE);
     wrefresh(game_box);
 
+    /* Initalize score window */
+    score_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 0, 2*WINDOW_WIDTH + 2);
+    box(score_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(score_box);
+
+    get_new_tetrimino();
+
     while (!end_game) {
-        clear();
-
         update_game();
-        display_game();
+        draw();
 
-        ++total_time;
-        usleep(delay);
+        ++nb_frames;
+        usleep(refresh_delay);
     }
 
     /* Close ncurses */

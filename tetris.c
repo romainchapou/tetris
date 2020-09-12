@@ -76,9 +76,11 @@ int fall_rate = 48;
 bool end_game = false;
 int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
 
-WINDOW *level_box;
-WINDOW *score_box;
-WINDOW *game_box;
+WINDOW* level_box;
+WINDOW* score_box;
+WINDOW* game_box;
+WINDOW* next_piece_box;
+
 BlockType blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
 
 typedef struct Tetrimino {
@@ -92,12 +94,15 @@ typedef struct Tetrimino {
     /* Type can be either I, O, T, L, J, Z or S */
     BlockType type;
 
-    /* Combinasion of type and angle, id of the shape in the shapes array */
+    /* Combination of type and angle, id of the shape in the shapes array */
     int shape_number;
 } Tetrimino;
 
 /* The tetrimino currently controlled by the player */
 Tetrimino ctetr;
+
+/* The tetrimino available next */
+Tetrimino ntetr;
 
 // @Optim : precompute this
 int get_shape_nb(BlockType type, int angle)
@@ -106,10 +111,10 @@ int get_shape_nb(BlockType type, int angle)
 }
 
 /* Each "pixel" is two characters wide */
-void print_pixel(int x, int y)
+void print_pixel(int x, int y, WINDOW* window)
 {
-    mvwaddch(game_box, 1+y, 1+2*x, ACS_BLOCK);
-    mvwaddch(game_box, 1+y, 2+2*x, ACS_BLOCK);
+    mvwaddch(window, 1+y, 1+2*x, ACS_BLOCK);
+    mvwaddch(window, 1+y, 2+2*x, ACS_BLOCK);
 }
 
 int max(int a, int b)
@@ -122,15 +127,19 @@ int min(int a, int b)
     return (a < b) ? a : b;
 }
 
-void get_new_tetrimino()
+Tetrimino get_new_tetrimino()
 {
-    ctetr.type = 1 + rand() % 7;
-    ctetr.angle = 0;
+    Tetrimino t;
 
-    ctetr.x = 5;
-    ctetr.y = 0;
+    t.type = 1 + rand() % 7;
+    t.angle = 0;
 
-    ctetr.shape_number = get_shape_nb(ctetr.type, ctetr.angle);
+    t.x = 5;
+    t.y = 0;
+
+    t.shape_number = get_shape_nb(t.type, t.angle);
+
+    return t;
 }
 
 bool shape_can_fit(int tx, int ty, int shape_number)
@@ -150,7 +159,7 @@ bool shape_can_fit(int tx, int ty, int shape_number)
 
 void rotate_tetrimino(int angle)
 {
-    // C modulos really are the greatests
+    // C modulos really are the greatest
     if (angle == -1)
         angle = 3;
 
@@ -342,7 +351,10 @@ void update_game()
             add_blocks_to_matrix();
             check_for_complete_line();
             check_for_game_over();
-            get_new_tetrimino(); // @Incomplete : add proper delay before this
+
+            // @Incomplete : add proper delay before this
+            ctetr = ntetr;
+            ntetr = get_new_tetrimino();
         }
         else {
             ++ctetr.y;
@@ -406,10 +418,27 @@ void display_current_tetrimino()
         x = ctetr.x + shapes[ctetr.shape_number][i][0];
         y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
-        print_pixel(x, y);
+        print_pixel(x, y, game_box);
     }
 
     wattroff(game_box, COLOR_PAIR(ctetr.type));
+}
+
+void display_next_tetrimino()
+{
+    int x;
+    int y;
+
+    wattron(next_piece_box, COLOR_PAIR(ntetr.type));
+
+    for (int i = 0; i < 4; ++i) {
+        x = shapes[ntetr.shape_number][i][0];
+        y = shapes[ntetr.shape_number][i][1];
+
+        print_pixel(x, y, next_piece_box);
+    }
+
+    wattroff(next_piece_box, COLOR_PAIR(ntetr.type));
 }
 
 void display_game()
@@ -429,10 +458,11 @@ void display_game()
     for (BlockType color = 1; color <= 7; ++color) {
         wattron(game_box, COLOR_PAIR(color));
 
+        // @Cleanup : should be (x, y) instead of (i, j)
         for (int i = 0; i < WINDOW_WIDTH; ++i)
             for (int j = 0; j < WINDOW_HEIGHT; ++j)
                 if (blocks[i][j] == color)
-                    print_pixel(i, j);
+                    print_pixel(i, j, game_box);
 
         wattroff(game_box, COLOR_PAIR(color));
     }
@@ -458,12 +488,23 @@ void display_score()
     wrefresh(score_box);
 }
 
+void display_next_piece()
+{
+    box(next_piece_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(next_piece_box, 0, 1, "Next");
+
+    display_next_tetrimino();
+
+    wrefresh(next_piece_box);
+}
+
 void draw()
 {
     clear();
     display_game();
     display_score();
     display_level();
+    display_next_piece();
 }
 
 int main()
@@ -484,32 +525,37 @@ int main()
     init_pair(6, COLOR_RED, -1);      /* Z tetrimino */
     init_pair(7, COLOR_GREEN, -1);    /* S tetrimino */
 
-    /* Initalize the seed used to randomly spawn tetriminos */
+    /* Initialize the seed used to randomly spawn tetriminos */
     srand(time(NULL));
 
-    /* Initalize game window */
+    /* Initialize game window */
     game_box = subwin(stdscr, WINDOW_HEIGHT + 2, 2*WINDOW_WIDTH + 2, 0, 0);
     box(game_box, ACS_VLINE, ACS_HLINE);
     wrefresh(game_box);
 
-    /* Initalize score window */
+    /* Initialize score window */
     score_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 0, 2*WINDOW_WIDTH + 2);
     box(score_box, ACS_VLINE, ACS_HLINE);
     wrefresh(score_box);
 
-    /* Initalize level window */
+    /* Initialize level window */
     level_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 3, 2*WINDOW_WIDTH + 2);
     box(level_box, ACS_VLINE, ACS_HLINE);
     wrefresh(level_box);
 
-    get_new_tetrimino();
+    /* Initialize next piece window */
+    next_piece_box = subwin(stdscr, 6 + 2, WINDOW_WIDTH + 2, 6, 2*WINDOW_WIDTH + 2);
+    box(next_piece_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(next_piece_box);
+
+    ctetr = get_new_tetrimino();
+    ntetr = get_new_tetrimino();
 
     /* For the starting level, this is the formula to get the lines to be
-     * cleared before getting to the next level. After that, a new level is
+     * cleared before getting to the next one. After that, a new level is
      * reached after clearing 10 lines. See https://tetris.wiki/Scoring
      */
-    lines_before_next_level = min(10 * start_level + 10,
-                                  max(100, 10 * start_level - 50));
+    lines_before_next_level = min(10 * start_level + 10, max(100, 10 * start_level - 50));
 
     while (!end_game) {
         update_game();

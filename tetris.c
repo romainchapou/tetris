@@ -66,14 +66,17 @@ const int refresh_delay = 16640;
 long score = 0;
 
 int level = 0;
+int start_level = 0;
+int lines_before_next_level;
 int cleared_lines = 0;
 
-/* Tetrimino's position will be updated once every update_frequency frame */
-int update_frequency = 48;
+/* Tetrimino's position will be updated once every fall_rate frame */
+int fall_rate = 48;
 
 bool end_game = false;
 int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
 
+WINDOW *level_box;
 WINDOW *score_box;
 WINDOW *game_box;
 BlockType blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
@@ -107,6 +110,16 @@ void print_pixel(int x, int y)
 {
     mvwaddch(game_box, 1+y, 1+2*x, ACS_BLOCK);
     mvwaddch(game_box, 1+y, 2+2*x, ACS_BLOCK);
+}
+
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+int min(int a, int b)
+{
+    return (a < b) ? a : b;
 }
 
 void get_new_tetrimino()
@@ -272,6 +285,44 @@ bool can_move_left()
     return true;
 }
 
+int new_fall_rate()
+{
+    switch (level) {
+        case 0: return 48;
+        case 1: return 43;
+        case 2: return 38;
+        case 3: return 33;
+        case 4: return 28;
+        case 5: return 23;
+        case 6: return 18;
+        case 7: return 13;
+        case 8: return 8;
+        case 9: return 6;
+
+        case 10:
+        case 11:
+        case 12:
+            return 5;
+
+        case 13:
+        case 14:
+        case 15:
+            return 4;
+
+        case 16:
+        case 17:
+        case 18:
+            return 3;
+    }
+
+    if (level >= 19 && level <= 28)
+        return 2;
+    else if (level >= 29)
+        return 1;
+    else
+        assert(0 && "Impossible level value");
+}
+
 void update_game()
 {
     /*
@@ -286,18 +337,27 @@ void update_game()
     wtimeout(game_box, 0);
     char last_input = wgetch(game_box);
 
-    if (nb_frames % update_frequency == 0) {
+    if (nb_frames % fall_rate == 0) {
         if (!can_move_down()) {
             add_blocks_to_matrix();
             check_for_complete_line();
             check_for_game_over();
             get_new_tetrimino(); // @Incomplete : add proper delay before this
         }
-        else
+        else {
             ++ctetr.y;
+        }
     }
 
-    switch(last_input) {
+    /* Update the level if needed */
+    if (cleared_lines >= lines_before_next_level) {
+        ++level;
+        lines_before_next_level += 10;
+        fall_rate = new_fall_rate();
+        nb_frames = 0;
+    }
+
+    switch (last_input) {
         case 'h':
             if (can_move_left())
                 --ctetr.x;
@@ -380,6 +440,15 @@ void display_game()
     wrefresh(game_box);
 }
 
+void display_level()
+{
+    box(level_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(level_box, 0, 1, "Level");
+    mvwprintw(level_box, 1, 1, "%ld", level);
+
+    wrefresh(level_box);
+}
+
 void display_score()
 {
     box(score_box, ACS_VLINE, ACS_HLINE);
@@ -394,6 +463,7 @@ void draw()
     clear();
     display_game();
     display_score();
+    display_level();
 }
 
 int main()
@@ -427,7 +497,19 @@ int main()
     box(score_box, ACS_VLINE, ACS_HLINE);
     wrefresh(score_box);
 
+    /* Initalize level window */
+    level_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 3, 2*WINDOW_WIDTH + 2);
+    box(level_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(level_box);
+
     get_new_tetrimino();
+
+    /* For the starting level, this is the formula to get the lines to be
+     * cleared before getting to the next level. After that, a new level is
+     * reached after clearing 10 lines. See https://tetris.wiki/Scoring
+     */
+    lines_before_next_level = min(10 * start_level + 10,
+                                  max(100, 10 * start_level - 50));
 
     while (!end_game) {
         update_game();
@@ -440,7 +522,7 @@ int main()
     /* Close ncurses */
     endwin();
 
-    printf("Game over!\nYour score is : Not implemented yet !\n");
+    printf("Game over!\nYour score is : %ld\n", score);
     
     return 0;
 }

@@ -344,7 +344,7 @@ void update_game()
      * mashing the keys.
      */
     wtimeout(game_box, 0);
-    char last_input = wgetch(game_box);
+    int last_input = wgetch(game_box);
 
     if (nb_frames % fall_rate == 0) {
         if (!can_move_down()) {
@@ -371,16 +371,19 @@ void update_game()
 
     switch (last_input) {
         case 'h':
+        case KEY_LEFT:
             if (can_move_left())
                 --ctetr.x;
             break;
 
         case 'l':
+        case KEY_RIGHT:
             if (can_move_right())
                 ++ctetr.x;
             break;
 
         case 'j':
+        case KEY_DOWN:
             if (can_move_down()) {
                 ++ctetr.y;
 
@@ -394,6 +397,7 @@ void update_game()
 
         case 'k':
         case 'c':
+        case KEY_UP:
             rotate_tetrimino(-1);
             break;
 
@@ -501,6 +505,7 @@ void display_next_piece()
 void draw()
 {
     clear();
+
     display_game();
     display_score();
     display_level();
@@ -509,10 +514,11 @@ void draw()
 
 int main()
 {
-    /* Initialize graphics */
+    /* Initialize ncurses */
     initscr();       // Initialize the window
-    noecho();        // Don't echo the keypresses
+    noecho();        // Don't echo the key presses
     curs_set(false); // Don't display the cursor
+    cbreak();        // Get input character by character
     start_color();   // Use colors
 
     /* Initialize the colors */
@@ -532,6 +538,7 @@ int main()
     game_box = subwin(stdscr, WINDOW_HEIGHT + 2, 2*WINDOW_WIDTH + 2, 0, 0);
     box(game_box, ACS_VLINE, ACS_HLINE);
     wrefresh(game_box);
+    keypad(game_box, true); // Enable arrow keys
 
     /* Initialize score window */
     score_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 0, 2*WINDOW_WIDTH + 2);

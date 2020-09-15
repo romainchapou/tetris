@@ -3,8 +3,10 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define WINDOW_WIDTH 10
 #define WINDOW_HEIGHT 22
@@ -63,6 +65,12 @@ char shapes[28][4][2] = {
 /* Run at around 60 fps */
 const int refresh_delay = 16640;
 
+/* Path to the file were the highscore is stored,
+ * $HOME/.config/ncurses_tetris/highscore */
+char* high_score_file;
+
+long old_highscore = 0;
+long highscore = 0;
 long score = 0;
 
 int level = 0;
@@ -78,6 +86,7 @@ int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
 
 WINDOW* level_box;
 WINDOW* score_box;
+WINDOW* highscore_box;
 WINDOW* game_box;
 WINDOW* next_piece_box;
 
@@ -125,6 +134,63 @@ int max(int a, int b)
 int min(int a, int b)
 {
     return (a < b) ? a : b;
+}
+
+/* @Cleanup : maybe have the highscore file be in the same directory as the
+ * source code so as to not clutter ~/.config */
+/* Initialise the value of high_score_file.
+ * This is needed as $HOME must be expanded */
+void init_highscore_info()
+{
+    char* high_score_dir = NULL;
+    char* home_dir = getenv("HOME");
+
+    int len_home_path = strlen(home_dir);
+    high_score_dir = calloc(len_home_path + 100, sizeof(char));
+    high_score_file = calloc(len_home_path + 100, sizeof(char));
+
+    strcat(high_score_dir, home_dir);
+    strcat(high_score_dir, "/.config/ncurses_tetris");
+
+    /* Create ~/.config/ncurses_tetris/ if needed */
+    mkdir(high_score_dir, 0777);
+
+    strcat(high_score_file, high_score_dir);
+    strcat(high_score_file, "/highscore");
+
+    free(high_score_dir);
+}
+
+void deinit_highscore_info()
+{
+    free(high_score_file);
+}
+
+void read_highscore()
+{
+    FILE* file = fopen(high_score_file, "r");
+
+    if (file != NULL) {
+        if (fscanf(file, "%ld\n", &highscore) != 1)
+            assert(0 && "Reading highscore from file failed");
+
+        old_highscore = highscore;
+        fclose(file);
+    }
+}
+
+void update_highscore()
+{
+    if (highscore > old_highscore) {
+        FILE* file = fopen(high_score_file, "w");
+
+        if (file != NULL) {
+            fprintf(file, "%ld\n", highscore);
+            fclose(file);
+        } else {
+            assert(0 && "Highscore file could not be opened");
+        }
+    }
 }
 
 Tetrimino get_new_tetrimino()
@@ -242,7 +308,7 @@ void check_for_complete_line()
 void check_for_game_over()
 {
     for (int x = 0; x <  WINDOW_WIDTH; ++x)
-        if(blocks[x][0])
+        if (blocks[x][0])
             end_game = true;
 }
 
@@ -390,7 +456,7 @@ void update_game()
                 /* Reset the timer when the tetrimino is about to be dropped as
                  * to give the player a last chance to place it correctly
                  * without any timer luck involved */
-                if(!can_move_down())
+                if (!can_move_down())
                     nb_frames = 0;
             }
             break;
@@ -409,6 +475,9 @@ void update_game()
         case 'q':
             end_game = true;
     }
+
+    if (score > highscore)
+        highscore = score;
 }
 
 void display_current_tetrimino()
@@ -502,6 +571,15 @@ void display_next_piece()
     wrefresh(next_piece_box);
 }
 
+void display_highscore()
+{
+    box(highscore_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(highscore_box, 0, 1, "Highscore");
+    mvwprintw(highscore_box, 1, 1, "%ld", highscore);
+
+    wrefresh(highscore_box);
+}
+
 void draw()
 {
     clear();
@@ -510,6 +588,7 @@ void draw()
     display_score();
     display_level();
     display_next_piece();
+    display_highscore();
 }
 
 int main()
@@ -555,6 +634,14 @@ int main()
     box(next_piece_box, ACS_VLINE, ACS_HLINE);
     wrefresh(next_piece_box);
 
+    /* Initialize highscore window */
+    highscore_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 14, 2*WINDOW_WIDTH + 2);
+    box(highscore_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(highscore_box);
+
+    init_highscore_info(); // must be done before read_highscore
+    read_highscore();
+
     ctetr = get_new_tetrimino();
     ntetr = get_new_tetrimino();
 
@@ -575,7 +662,13 @@ int main()
     /* Close ncurses */
     endwin();
 
+    update_highscore();
+    deinit_highscore_info();
+
     printf("Game over!\nYour score is : %ld\n", score);
+
+    if (highscore > old_highscore)
+        printf("This is a new highscore!\n");
     
     return 0;
 }

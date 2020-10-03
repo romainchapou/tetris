@@ -61,6 +61,17 @@ char shapes[28][4][2] = {
     {{ 0, -1}, { 0,  0}, { 1,  0}, { 1,  1}},  // 27 : S
 };
 
+/* Values used to center the tetrimino in the preview box */
+char center_lengths[7] = {
+    5, // I
+    5, // O
+    4, // T
+    4, // L
+    4, // J
+    4, // Z
+    4, // S
+};
+
 /* Run at around 60 fps */
 const int refresh_delay = 16640;
 
@@ -528,6 +539,7 @@ void display_next_tetrimino()
 {
     int x;
     int y;
+    int center_length = center_lengths[ntetr.type - 1];
 
     wattron(next_piece_box, COLOR_PAIR(ntetr.type));
 
@@ -535,7 +547,8 @@ void display_next_tetrimino()
         x = shapes[ntetr.shape_number][i][0];
         y = shapes[ntetr.shape_number][i][1];
 
-        print_pixel(x, y, next_piece_box);
+        mvwaddch(next_piece_box, 1+y, 1 + center_length + 2*x, ACS_BLOCK);
+        mvwaddch(next_piece_box, 1+y, 2 + center_length + 2*x, ACS_BLOCK);
     }
 
     wattroff(next_piece_box, COLOR_PAIR(ntetr.type));
@@ -664,30 +677,30 @@ int main()
     wrefresh(game_box);
     keypad(game_box, true); // Enable arrow keys
 
-    /* Initialize score window */
-    score_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 0, 2*WINDOW_WIDTH + 2);
-    box(score_box, ACS_VLINE, ACS_HLINE);
-    wrefresh(score_box);
-
     /* Initialize level window */
-    level_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 3, 2*WINDOW_WIDTH + 2);
+    level_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 2, 2*WINDOW_WIDTH + 2);
     box(level_box, ACS_VLINE, ACS_HLINE);
     wrefresh(level_box);
 
+    /* Initialize lines window */
+    lines_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 5, 2*WINDOW_WIDTH + 2);
+    box(lines_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(lines_box);
+
     /* Initialize next piece window */
-    next_piece_box = subwin(stdscr, 6 + 2, WINDOW_WIDTH + 2, 6, 2*WINDOW_WIDTH + 2);
+    next_piece_box = subwin(stdscr, 2 + 2, WINDOW_WIDTH + 2, 9, 2*WINDOW_WIDTH + 2);
     box(next_piece_box, ACS_VLINE, ACS_HLINE);
     wrefresh(next_piece_box);
 
+    /* Initialize score window */
+    score_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 14, 2*WINDOW_WIDTH + 2);
+    box(score_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(score_box);
+
     /* Initialize highscore window */
-    highscore_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 14, 2*WINDOW_WIDTH + 2);
+    highscore_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 17, 2*WINDOW_WIDTH + 2);
     box(highscore_box, ACS_VLINE, ACS_HLINE);
     wrefresh(highscore_box);
-
-    /* Initialize lines window */
-    lines_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 17, 2*WINDOW_WIDTH + 2);
-    box(lines_box, ACS_VLINE, ACS_HLINE);
-    wrefresh(lines_box);
 
     /* Initialize pause window */
     pause_box = subwin(stdscr, 3, 8, WINDOW_HEIGHT / 2, 7);

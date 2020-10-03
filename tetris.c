@@ -88,6 +88,7 @@ int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
 WINDOW* level_box;
 WINDOW* score_box;
 WINDOW* highscore_box;
+WINDOW* lines_box;
 WINDOW* game_box;
 WINDOW* pause_box;
 WINDOW* next_piece_box;
@@ -606,6 +607,15 @@ void display_highscore()
     wrefresh(highscore_box);
 }
 
+void display_lines()
+{
+    box(lines_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(lines_box, 0, 1, "Lines");
+    mvwprintw(lines_box, 1, 1, "%ld", cleared_lines);
+
+    wrefresh(lines_box);
+}
+
 void draw_game()
 {
     clear();
@@ -615,6 +625,7 @@ void draw_game()
     display_level();
     display_next_piece();
     display_highscore();
+    display_lines();
 }
 
 void draw_pause()
@@ -672,6 +683,11 @@ int main()
     highscore_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 14, 2*WINDOW_WIDTH + 2);
     box(highscore_box, ACS_VLINE, ACS_HLINE);
     wrefresh(highscore_box);
+
+    /* Initialize lines window */
+    lines_box = subwin(stdscr, 1 + 2, WINDOW_WIDTH + 2, 17, 2*WINDOW_WIDTH + 2);
+    box(lines_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(lines_box);
 
     /* Initialize pause window */
     pause_box = subwin(stdscr, 3, 8, WINDOW_HEIGHT / 2, 7);

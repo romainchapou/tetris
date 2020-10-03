@@ -81,12 +81,15 @@ int cleared_lines = 0;
 int fall_rate = 48;
 
 bool end_game = false;
+bool game_is_paused = false;
+
 int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
 
 WINDOW* level_box;
 WINDOW* score_box;
 WINDOW* highscore_box;
 WINDOW* game_box;
+WINDOW* pause_box;
 WINDOW* next_piece_box;
 
 BlockType blocks[WINDOW_WIDTH][WINDOW_HEIGHT];
@@ -476,12 +479,31 @@ void update_game()
             rotate_tetrimino(-1);
             break;
 
+        case 'p':
+            game_is_paused = true;
+            break;
+
         case 'q':
             end_game = true;
     }
 
     if (score > highscore)
         highscore = score;
+}
+
+void update_pause()
+{
+    wtimeout(game_box, 0);
+    int last_input = wgetch(game_box);
+
+    switch (last_input) {
+        case 'p':
+            game_is_paused = false;
+            break;
+
+        case 'q':
+            end_game = true;
+    }
 }
 
 void display_current_tetrimino()
@@ -584,7 +606,7 @@ void display_highscore()
     wrefresh(highscore_box);
 }
 
-void draw()
+void draw_game()
 {
     clear();
 
@@ -593,6 +615,14 @@ void draw()
     display_level();
     display_next_piece();
     display_highscore();
+}
+
+void draw_pause()
+{
+    box(pause_box, ACS_VLINE, ACS_HLINE);
+    mvwprintw(pause_box, 1, 1, "Paused");
+
+    wrefresh(pause_box);
 }
 
 int main()
@@ -643,6 +673,11 @@ int main()
     box(highscore_box, ACS_VLINE, ACS_HLINE);
     wrefresh(highscore_box);
 
+    /* Initialize pause window */
+    pause_box = subwin(stdscr, 3, 8, WINDOW_HEIGHT / 2, 7);
+    box(pause_box, ACS_VLINE, ACS_HLINE);
+    wrefresh(pause_box);
+
     init_highscore_info(); // must be done before read_highscore
     read_highscore();
 
@@ -656,8 +691,13 @@ int main()
     lines_before_next_level = min(10 * start_level + 10, max(100, 10 * start_level - 50));
 
     while (!end_game) {
-        update_game();
-        draw();
+        if (!game_is_paused) {
+            update_game();
+            draw_game();
+        } else {
+            update_pause();
+            draw_pause();
+        }
 
         ++nb_frames;
 

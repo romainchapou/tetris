@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define WINDOW_WIDTH 10
-#define WINDOW_HEIGHT 22
+#define WINDOW_HEIGHT 20
 
 typedef enum BlockType {
     BLOCK_TYPE_NONE = 0,

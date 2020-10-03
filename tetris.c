@@ -243,7 +243,7 @@ void rotate_tetrimino(int angle)
     }
 }
 
-void add_blocks_to_matrix()
+void add_blocks_to_board()
 {
     int x;
     int y;
@@ -290,7 +290,7 @@ int score_factor(int nb_completed_lines)
     assert(0 && "Impossible number of lines cleared");
 }
 
-void check_for_complete_line()
+void check_for_complete_lines()
 {
     int nb_completed_lines = 0;
 
@@ -419,15 +419,14 @@ void update_game()
 
     if (nb_frames % fall_rate == 0) {
         if (!can_move_down()) {
-            add_blocks_to_matrix();
-            check_for_complete_line();
+            add_blocks_to_board();
+            check_for_complete_lines();
             check_for_game_over();
 
             // @Incomplete : add proper delay before this
             ctetr = ntetr;
             ntetr = get_new_tetrimino();
-        }
-        else {
+        } else {
             ++ctetr.y;
         }
     }
@@ -661,6 +660,8 @@ int main()
         draw();
 
         ++nb_frames;
+
+        // @Hack : this makes the game run at an unpredictable frame rate
         usleep(refresh_delay);
     }
 

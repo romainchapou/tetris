@@ -723,15 +723,18 @@ int main()
         if (!game_is_paused) {
             update_game();
             draw_game();
+
+            // @Hack : this makes the game run at an unpredictable frame rate
+            usleep(refresh_delay);
         } else {
             update_pause();
             draw_pause();
+
+            // When paused, the game doesn't need to be updated as frequently.
+            usleep(10*refresh_delay);
         }
 
         ++nb_frames;
-
-        // @Hack : this makes the game run at an unpredictable frame rate
-        usleep(refresh_delay);
     }
 
     /* Close ncurses */

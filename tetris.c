@@ -209,11 +209,11 @@ void update_highscore()
     }
 }
 
-Tetrimino get_new_tetrimino()
+Tetrimino make_new_tetrimino(BlockType type)
 {
     Tetrimino t;
 
-    t.type = 1 + rand() % 7;
+    t.type = type;
     t.angle = 0;
 
     t.x = 5;
@@ -222,6 +222,19 @@ Tetrimino get_new_tetrimino()
     t.shape_number = get_shape_nb(t.type, t.angle);
 
     return t;
+}
+
+/* Use the same random generator as NES Tetris */
+void get_new_tetrimino()
+{
+    BlockType old_type = ntetr.type;
+    BlockType new_type = rand() % 8;
+
+    if (new_type == old_type || new_type == 0)
+        new_type = 1 + rand() % 7;
+
+    ctetr = ntetr;
+    ntetr = make_new_tetrimino(new_type);
 }
 
 bool shape_can_fit(int tx, int ty, int shape_number)
@@ -439,8 +452,7 @@ void update_game()
             check_for_game_over();
 
             // @Incomplete : add proper delay before this
-            ctetr = ntetr;
-            ntetr = get_new_tetrimino();
+            get_new_tetrimino();
         } else {
             ++ctetr.y;
         }
@@ -710,8 +722,9 @@ int main()
     init_highscore_info(); // must be done before read_highscore
     read_highscore();
 
-    ctetr = get_new_tetrimino();
-    ntetr = get_new_tetrimino();
+    /* Initialize the tetriminos */
+    ntetr = make_new_tetrimino(1 + rand() % 7);
+    get_new_tetrimino();
 
     /* For the starting level, this is the formula to get the lines to be
      * cleared before getting to the next one. After that, a new level is

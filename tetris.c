@@ -142,6 +142,14 @@ void print_pixel(int x, int y, WINDOW* window)
     }
 }
 
+void print_shiny_pixel(int x, int y, WINDOW* window)
+{
+    if (y >= 0) {
+        mvwaddch(window, 1+y, 1+2*x, ACS_CKBOARD);
+        mvwaddch(window, 1+y, 2+2*x, ACS_CKBOARD);
+    }
+}
+
 int max(int a, int b)
 {
     return (a > b) ? a : b;
@@ -318,17 +326,42 @@ int score_factor(int nb_completed_lines)
     assert(0 && "Impossible number of lines cleared");
 }
 
+void highlight_line(int line_nb)
+{
+    wattron(game_box, COLOR_WHITE);
+
+    for (int i = 0; i < WINDOW_WIDTH; ++i)
+        print_shiny_pixel(i, line_nb, game_box);
+
+    wattroff(game_box, COLOR_WHITE);
+}
+
 void check_for_complete_lines()
 {
     int nb_completed_lines = 0;
+    int lines_to_be_removed[4] = {-1, -1, -1, -1};
 
+    /* Find the lines to be removed */
     // @Optim : only do this for lines close to the fallen tetrimino
     for (int i = 0; i < WINDOW_HEIGHT; ++i) {
         if (line_is_complete(i)) {
-            remove_line(i);
+            lines_to_be_removed[nb_completed_lines] = i;
             ++nb_completed_lines;
         }
     }
+
+    /* Highlight all lines to be removed */
+    for (int i = 0; i < nb_completed_lines; ++i)
+            highlight_line(lines_to_be_removed[i]);
+    wrefresh(game_box);
+
+    /* Freeze for 20 frames */
+    if (nb_completed_lines > 0)
+        usleep(20*refresh_delay);
+
+    /* Actually remove the lines */
+    for (int i = 0; i < nb_completed_lines; ++i)
+        remove_line(lines_to_be_removed[i]);
 
     score += (level + 1) * score_factor(nb_completed_lines);
     cleared_lines += nb_completed_lines;

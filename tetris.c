@@ -94,7 +94,8 @@ int fall_rate = 48;
 bool end_game = false;
 bool game_is_paused = false;
 
-int nb_frames = 0; // @Cleanup : make sure this doesn't overflow
+// @Hack : This starts at one so the game doesn't update right away
+int nb_frames = 1;
 
 WINDOW* level_box;
 WINDOW* score_box;

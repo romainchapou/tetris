@@ -289,7 +289,8 @@ void add_blocks_to_board()
         x = ctetr.x + shapes[ctetr.shape_number][i][0];
         y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
-        blocks[x][y] = ctetr.type;
+        if (x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT)
+            blocks[x][y] = ctetr.type;
     }
 }
 
@@ -368,13 +369,21 @@ void check_for_complete_lines()
     cleared_lines += nb_completed_lines;
 }
 
-// @Hack : this simple check will do for now, but we will eventually need
-// something better
+/* If the new piece (ctetr) can't fit, it's game over */
 void check_for_game_over()
 {
-    for (int x = 0; x <  WINDOW_WIDTH; ++x)
-        if (blocks[x][0])
+    int x;
+    int y;
+
+    for (int i = 0; i < 4; ++i) {
+        x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+
+        if (blocks[x][y]) {
             end_game = true;
+            return;
+        }
+    }
 }
 
 bool can_move_down()
@@ -483,10 +492,10 @@ void update_game()
         if (!can_move_down()) {
             add_blocks_to_board();
             check_for_complete_lines();
-            check_for_game_over();
 
             // @Incomplete : add proper delay before this
             get_new_tetrimino();
+            check_for_game_over();
         } else {
             ++ctetr.y;
         }

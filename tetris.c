@@ -280,10 +280,12 @@ void rotate_tetrimino(int angle)
     }
 }
 
-void add_blocks_to_board()
+/* Returns the height of the locked piece (used for the entry delay) */
+int add_blocks_to_board()
 {
     int x;
     int y;
+    int height = WINDOW_HEIGHT;
 
     for (int i = 0; i < 4; ++i) {
         x = ctetr.x + shapes[ctetr.shape_number][i][0];
@@ -291,7 +293,13 @@ void add_blocks_to_board()
 
         if (x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT)
             blocks[x][y] = ctetr.type;
+
+        // "height" will be the minimum y value
+        if (y < height)
+            height = y;
     }
+
+    return height;
 }
 
 bool line_is_complete(int i)
@@ -367,6 +375,12 @@ void check_for_complete_lines()
 
     score += (level + 1) * score_factor(nb_completed_lines);
     cleared_lines += nb_completed_lines;
+}
+
+// See https://tetris.wiki/Tetris_(NES,_Nintendo) for the ARE formula used
+void do_entry_delay(int piece_height)
+{
+    usleep(refresh_delay * (18 - 2 * (piece_height / 4)));
 }
 
 /* If the new piece (ctetr) can't fit, it's game over */
@@ -490,10 +504,10 @@ void update_game()
 
     if (nb_frames % fall_rate == 0) {
         if (!can_move_down()) {
-            add_blocks_to_board();
+            int piece_height = add_blocks_to_board();
             check_for_complete_lines();
+            do_entry_delay(piece_height);
 
-            // @Incomplete : add proper delay before this
             get_new_tetrimino();
             check_for_game_over();
         } else {

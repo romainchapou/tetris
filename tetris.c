@@ -75,6 +75,9 @@ char center_lengths[7] = {
 /* Run at around 60 fps */
 const int refresh_delay = 16640;
 
+/* The number of frame every step of the curtain animation will last */
+const int curtain_frame_freq = 10;
+
 /* Path to the file were the highscore is stored,
  * $HOME/.config/ncurses_tetris/highscore */
 char* high_score_file;
@@ -710,6 +713,18 @@ void draw_game()
     display_lines();
 }
 
+void draw_falling_curtain()
+{
+    wattron(game_box, COLOR_PAIR(4));
+
+    for (int j = 0; j < nb_frames / curtain_frame_freq; ++j)
+        for (int i = 0; i < WINDOW_WIDTH; ++i)
+            print_shiny_pixel(i, j, game_box);
+
+    wattroff(game_box, COLOR_PAIR(4));
+    wrefresh(game_box);
+}
+
 void draw_pause()
 {
     box(pause_box, ACS_VLINE, ACS_HLINE);
@@ -789,6 +804,7 @@ int main()
      */
     lines_before_next_level = min(10 * start_level + 10, max(100, 10 * start_level - 50));
 
+    /* Main game loop */
     while (!end_game) {
         if (!game_is_paused) {
             update_game();
@@ -805,6 +821,14 @@ int main()
         }
 
         ++nb_frames;
+    }
+
+    nb_frames = 0;
+
+    /* Play the game over animation */
+    while (++nb_frames < curtain_frame_freq * (WINDOW_HEIGHT + 1)) {
+        draw_falling_curtain();
+        usleep(refresh_delay);
     }
 
     /* Close ncurses */

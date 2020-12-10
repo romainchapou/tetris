@@ -733,8 +733,21 @@ void draw_pause()
     wrefresh(pause_box);
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    /* Parse the command line for starting at a given level */
+    if (argc > 1)
+        start_level = atoi(argv[1]);
+
+    level = start_level;
+    fall_rate = new_fall_rate();
+
+    /* For the starting level, this is the formula to get the lines to be
+     * cleared before getting to the next one. After that, a new level is
+     * reached after clearing 10 lines. See https://tetris.wiki/Scoring
+     */
+    lines_before_next_level = min(10 * start_level + 10, max(100, 10 * start_level - 50));
+
     /* Initialize ncurses */
     initscr();       // Initialize the window
     noecho();        // Don't echo the key presses
@@ -797,12 +810,6 @@ int main()
     /* Initialize the tetriminos */
     ntetr = make_new_tetrimino(1 + rand() % 7);
     get_new_tetrimino();
-
-    /* For the starting level, this is the formula to get the lines to be
-     * cleared before getting to the next one. After that, a new level is
-     * reached after clearing 10 lines. See https://tetris.wiki/Scoring
-     */
-    lines_before_next_level = min(10 * start_level + 10, max(100, 10 * start_level - 50));
 
     /* Main game loop */
     while (!end_game) {

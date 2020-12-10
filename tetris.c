@@ -491,6 +491,16 @@ int new_fall_rate()
         assert(0 && "Impossible level value");
 }
 
+void clear_buffered_inputs()
+{
+    wtimeout(game_box, 0);
+    int last_input;
+
+    do {
+        last_input = wgetch(game_box);
+    } while (last_input != ERR);
+}
+
 void update_game()
 {
     /*
@@ -509,6 +519,8 @@ void update_game()
         if (!can_move_down()) {
             int piece_height = add_blocks_to_board();
             check_for_complete_lines();
+
+            clear_buffered_inputs();
             do_entry_delay(piece_height);
 
             get_new_tetrimino();
@@ -843,6 +855,9 @@ int main(int argc, char* argv[])
 
     update_highscore();
     deinit_highscore_info();
+
+    /* Avoid printing the last inputted keys in the command line */
+    clear_buffered_inputs();
 
     printf("Game over!\nYour score is : %ld\n", score);
 

@@ -164,8 +164,6 @@ int min(int a, int b)
     return (a < b) ? a : b;
 }
 
-/* @Cleanup : maybe have the highscore file be in the same directory as the
- * source code so as to not clutter ~/.config */
 /* Initialise the value of high_score_file.
  * This is needed as $HOME must be expanded */
 void init_highscore_info()
@@ -251,11 +249,9 @@ void get_new_tetrimino()
 
 bool shape_can_fit(int tx, int ty, int shape_number)
 {
-    int x; int y;
-
     for (int i = 0; i < 4; ++i) {
-        x = tx + shapes[shape_number][i][0];
-        y = ty + shapes[shape_number][i][1];
+        int x = tx + shapes[shape_number][i][0];
+        int y = ty + shapes[shape_number][i][1];
 
         if (y < 0)
             continue;
@@ -268,7 +264,7 @@ bool shape_can_fit(int tx, int ty, int shape_number)
 
 void rotate_tetrimino(int angle)
 {
-    // C modulos really are the greatest
+    // C modulos really are great
     if (angle == -1)
         angle = 3;
 
@@ -286,13 +282,11 @@ void rotate_tetrimino(int angle)
 /* Returns the height of the locked piece (used for the entry delay) */
 int add_blocks_to_board()
 {
-    int x;
-    int y;
     int height = WINDOW_HEIGHT;
 
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT)
             blocks[x][y] = ctetr.type;
@@ -307,8 +301,8 @@ int add_blocks_to_board()
 
 bool line_is_complete(int i)
 {
-    for (int j = 0; j < WINDOW_WIDTH; ++j) {
-        if (!blocks[j][i])
+    for (int x = 0; x < WINDOW_WIDTH; ++x) {
+        if (!blocks[x][i])
             return false;
     }
 
@@ -389,12 +383,9 @@ void do_entry_delay(int piece_height)
 /* If the new piece (ctetr) can't fit, it's game over */
 void check_for_game_over()
 {
-    int x;
-    int y;
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (blocks[x][y]) {
             end_game = true;
@@ -405,12 +396,9 @@ void check_for_game_over()
 
 bool can_move_down()
 {
-    int x;
-    int y;
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (y < 0)
             continue;
@@ -423,12 +411,9 @@ bool can_move_down()
 
 bool can_move_right()
 {
-    int x;
-    int y;
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (x >= WINDOW_WIDTH - 1 || (y >= 0 && blocks[x + 1][y]))
             return false;
@@ -439,12 +424,9 @@ bool can_move_right()
 
 bool can_move_left()
 {
-    int x;
-    int y;
-
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         if (x <= 0 || (y >= 0 && blocks[x - 1][y]))
             return false;
@@ -507,10 +489,6 @@ void update_game()
      * Get an input from the keyboard without waiting.
      * This works pretty well and even seems to add inputs to an internal queue
      * when they can't be treated right now.
-     *
-     * @Cleanup : See if it's possible to set the size of the input queue
-     * (something like 3 should work nicely) as it causes weird behaviour when
-     * mashing the keys.
      */
     wtimeout(game_box, 0);
     int last_input = wgetch(game_box);
@@ -604,14 +582,11 @@ void update_pause()
 
 void display_current_tetrimino()
 {
-    int x;
-    int y;
-
     wattron(game_box, COLOR_PAIR(ctetr.type));
 
     for (int i = 0; i < 4; ++i) {
-        x = ctetr.x + shapes[ctetr.shape_number][i][0];
-        y = ctetr.y + shapes[ctetr.shape_number][i][1];
+        int x = ctetr.x + shapes[ctetr.shape_number][i][0];
+        int y = ctetr.y + shapes[ctetr.shape_number][i][1];
 
         print_pixel(x, y, game_box);
     }
@@ -621,15 +596,13 @@ void display_current_tetrimino()
 
 void display_next_tetrimino()
 {
-    int x;
-    int y;
     int center_length = center_lengths[ntetr.type - 1];
 
     wattron(next_piece_box, COLOR_PAIR(ntetr.type));
 
     for (int i = 0; i < 4; ++i) {
-        x = shapes[ntetr.shape_number][i][0];
-        y = shapes[ntetr.shape_number][i][1];
+        int x = shapes[ntetr.shape_number][i][0];
+        int y = shapes[ntetr.shape_number][i][1];
 
         mvwaddch(next_piece_box, 1+y, 1 + center_length + 2*x, ACS_BLOCK);
         mvwaddch(next_piece_box, 1+y, 2 + center_length + 2*x, ACS_BLOCK);
@@ -655,11 +628,10 @@ void display_game()
     for (BlockType color = 1; color <= 7; ++color) {
         wattron(game_box, COLOR_PAIR(color));
 
-        // @Cleanup : should be (x, y) instead of (i, j)
-        for (int i = 0; i < WINDOW_WIDTH; ++i)
-            for (int j = 0; j < WINDOW_HEIGHT; ++j)
-                if (blocks[i][j] == color)
-                    print_pixel(i, j, game_box);
+        for (int x = 0; x < WINDOW_WIDTH; ++x)
+            for (int y = 0; y < WINDOW_HEIGHT; ++y)
+                if (blocks[x][y] == color)
+                    print_pixel(x, y, game_box);
 
         wattroff(game_box, COLOR_PAIR(color));
     }
@@ -859,7 +831,7 @@ int main(int argc, char* argv[])
     /* Avoid printing the last inputted keys in the command line */
     clear_buffered_inputs();
 
-    printf("Game over!\nYour score is : %ld\n", score);
+    printf("Game over!\nYour score is: %ld\n", score);
 
     if (highscore > old_highscore)
         printf("This is a new highscore!\n");

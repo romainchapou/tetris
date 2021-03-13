@@ -1,5 +1,4 @@
-CC=gcc
-CFLAGS=-std=gnu99 -Wall -Wextra -g3
+CFLAGS=-std=gnu99 -Wall -Wextra -O3
 LDFLAGS=-lncurses
 
 all: tetris
